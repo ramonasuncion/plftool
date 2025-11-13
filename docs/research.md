@@ -43,31 +43,4 @@ I need to analyze them side-by-side.
 > [!NOTE]
 > I'll be using the [MamboEDU firmware](https://github.com/Parrot-Developers/MinidronesEdu/tree/master/mambo-2.6.11) since Paparazzi was tested using that firmware because the original firmware doesn't allow bluetooth network connection.
 
-```bash
-$ file airbornenight.plf
-airbornenight.plf: data
-```
-
-This doesn't tell us anything, but using `file` tells us if the file is compressed, encrypted, or plain text.
-
-```bash
-binwalk rs_edu_mambo_2.6.11.plf | head
-```
-
-```bash
-dd if=rs_edu_mambo_2.6.11.plf bs=1 skip=772 of=zImage
-```
-
-```bash
-dd if=zImage bs=1 skip=16643 of=kernel.gz
-```
-
-```
-gunzip kernel.gz
-```
-
-```bash
-strings -td kernel | grep -i "/home"
-```
-
-
+TBD: Looks to be incremental firmware updates. I think the actual firmware lives on the drone.
