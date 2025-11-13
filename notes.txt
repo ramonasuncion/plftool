@@ -1,0 +1,7 @@
+./cramfs-tools/mkcramfs hybrid_fs out_partition2.cramfs
+file out_partition2.cramfs
+cp out_airborne/df3dee4d250b4849b8e82b9f7d384b43/rel/partition-1 repack/partition-1
+stat -c %s repack/partition-2
+dd if=.plf of=header.bin bs=1 count=768
+dd if=.plf of=footer.bin bs=1 skip=$(( $(stat -c %s .plf) - 64 ))
+
