@@ -33,8 +33,8 @@ You can learn more about the Parrot minidrone from the [user guide](https://www.
 
 You can find the offical firmware for the Parrot Airborne on the [Parrot site](https://www.parrot.com/en/support/documentation/airborne).
 
-1. Kernel: `2.6.36-102952-g6aedf2e`
-2. BusyBox: `v1.20.2 (2017-03-22)
+1. **Kernel:** `2.6.36-102952-g6aedf2e`
+2. **BusyBox:** `v1.20.2 (2017-03-22)`
 
 ## What's missing?
 
