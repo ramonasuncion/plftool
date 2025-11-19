@@ -29,6 +29,13 @@ It's a [quadcopter drone](https://en.wikipedia.org/wiki/Quadcopter) with:
 
 You can learn more about the Parrot minidrone from the [user guide](https://www.parrot.com/assets/s3fs-public/2021-09/airborne-night-drone_user-guide_uk.pdf).
 
+## Offical firmware
+
+You can find the offical firmware for the Parrot Airborne on the [Parrot site](https://www.parrot.com/en/support/documentation/airborne).
+
+1. Kernel: `2.6.36-102952-g6aedf2e`
+2. BusyBox: `v1.20.2 (2017-03-22)
+
 ## What's missing?
 
 You're limited to remote control commands over BLE using the FreeFlight app.
