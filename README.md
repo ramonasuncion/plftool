@@ -13,6 +13,13 @@ This document collects my finding about the Parrot **Airborne Night (SWAT)** fir
 
 I have a Parrot Airborne Night Drone that my brother gave me about 8 years ago. The company [ditched consumer drones](https://www.digitalcameraworld.com/news/parrot-ditches-consumer-drones-and-its-profits-take-off) in 2021 but it's making huge profits on B2B.
 
+## Offical firmware
+
+You can find the offical firmware for the Parrot Airborne on the [Parrot site](https://www.parrot.com/en/support/documentation/airborne).
+
+1. **Kernel:** `2.6.36-102952-g6aedf2e`
+2. **BusyBox:** `v1.20.2 (2017-03-22)`
+
 ## Capabilities
 
 It's a [quadcopter drone](https://en.wikipedia.org/wiki/Quadcopter) with:
@@ -28,13 +35,6 @@ It's a [quadcopter drone](https://en.wikipedia.org/wiki/Quadcopter) with:
 - Weight: 1.9 oz.
 
 You can learn more about the Parrot minidrone from the [user guide](https://www.parrot.com/assets/s3fs-public/2021-09/airborne-night-drone_user-guide_uk.pdf).
-
-## Offical firmware
-
-You can find the offical firmware for the Parrot Airborne on the [Parrot site](https://www.parrot.com/en/support/documentation/airborne).
-
-1. **Kernel:** `2.6.36-102952-g6aedf2e`
-2. **BusyBox:** `v1.20.2 (2017-03-22)`
 
 ## What's missing?
 
