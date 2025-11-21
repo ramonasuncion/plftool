@@ -1,0 +1,14 @@
+nm -D libplfcheck.so | grep -v " U "
+00009140 A __bss_end__
+00009140 A _bss_end__
+0000913c A __bss_start
+0000913c A __bss_start__
+         w __cxa_finalize@GLIBC_2.4
+0000913c A _edata
+00009140 A __end__
+00009140 A _end
+00000b48 T _fini
+         w __gmon_start__
+00000510 T _init
+         w _Jv_RegisterClasses
+00000780 T libplfcheck_check
