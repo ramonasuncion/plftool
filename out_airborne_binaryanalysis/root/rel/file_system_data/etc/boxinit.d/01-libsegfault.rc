@@ -1,3 +1,0 @@
-on init
-    export SEGFAULT_OUTPUT_NAME /dev/ulog_main
-    export SEGFAULT_SIGNALS "segv abrt"
