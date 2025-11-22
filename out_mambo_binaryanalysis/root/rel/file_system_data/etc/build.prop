@@ -1,0 +1,12 @@
+ro.build.date=Thu Aug 17 15:37:19 CEST 2017
+ro.build.date.utc=1502977039
+ro.build.alchemy.product=delos
+ro.build.alchemy.variant=v3
+ro.build.hostname=hugo-js
+ro.parrot.build.group=drones
+ro.parrot.build.project=delos
+ro.parrot.build.product=delos
+ro.parrot.build.variant=v3
+ro.parrot.build.region=
+ro.parrot.build.uid=delos-v3-20170817-1537-0.0.0
+ro.parrot.build.version=0.0.0
