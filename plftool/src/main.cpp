@@ -25,6 +25,24 @@ static std::vector<std::byte> read_file(const std::string &path)
   return out;
 }
 
+static void write_file(const std::string &path, const std::vector<std::byte> &buf)
+{
+  std::ofstream f(p, std::ios::binary);
+  if (!f) {
+    std::cerr << "err: cannot open file '" << path << "'\n";
+    exit(1);
+  }
+
+  if (!buf.empty()) { 
+    f.write(reinterpret_cast<const char*>(buf.data()), buf.size());
+    if (!f) {
+      std::cerr << "err: failed to write file '" << path << "'\n";
+      exit(1);
+    }
+  }
+}
+
+
 static void plf_info(const std::filesystem::path &p)
 {
   auto data = read_file(p);
