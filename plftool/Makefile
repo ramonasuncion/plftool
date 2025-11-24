@@ -12,7 +12,7 @@ SRCS_CPP = $(wildcard $(SRC)/*.cpp)
 OBJS_CPP = $(SRCS_CPP:$(SRC)/%.cpp=$(BIN)/%.o)
 
 main: $(OBJS_CPP) | mkbin
-	$(CXX) $(CXXFLAGS) $^ -o $(BIN)/plftool
+	$(CXX) $(CXXFLAGS) $^ -o $(BIN)/plftool -lz
 
 $(BIN)/%.o: $(SRC)/%.cpp | mkbin
 	$(CXX) $(CXXFLAGS) -c $< -o $@
