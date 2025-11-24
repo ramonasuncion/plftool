@@ -1,4 +1,4 @@
-# Airborne Parrot Firmware Research
+# Parrot Airborne Night Firmware Research
 
 > [!WARNING]
 > For educational and research purposes only. Follow all local laws.
