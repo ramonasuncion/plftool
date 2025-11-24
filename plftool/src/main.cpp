@@ -237,6 +237,16 @@ recompute_header_crc(const std::vector<std::byte> &buf, const PLFHeader &hdr)
   return crc_finalize(crc, count);
 }
 
+static std::string hex2(uint32_t v)
+{
+  std::ostringstream oss;
+
+  oss << std::uppercase << std::hex
+      << std::setw(2) << std::setfill('0')
+      << v;
+
+  return oss.str();
+}
 
 static void plf_info(const std::filesystem::path &p)
 {
