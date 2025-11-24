@@ -1,8 +1,14 @@
-#include <iostream>
 #include <cstdint>
-#include <filesystem>
+#include <cstddef>
 #include <vector>
+#include <string>
 #include <fstream>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+#include <cstring>
+#include <cstdlib>
+#include <zlib.h>
 #include "plf_crc_table.hpp"
 
 #pragma pack(push, 1)
@@ -248,36 +254,81 @@ static std::string hex2(uint32_t v)
   return oss.str();
 }
 
-static void plf_info(const std::filesystem::path &p)
+static void cmd_info(const std::string &path)
 {
-  auto data = read_file(p);
-  std::cout << data.size() << "\n";
-}
+  std::vector<std::byte> data = read_file(path);
+  auto parsed = parse_plf(data);
+  PLFHeader hdr = parsed.first;
+  const std::vector<PLFEntry> &entries = parsed.second;
 
-static void print_usage(const std::string &prog) {
-  std::cerr
-    << "usage: " << prog << " info plf_file\n";
+  std::cout << "PLF file: " << path << "\n";
+  std::cout << "  Size:            " << data.size() << "\n";
+  std::cout << "  Magic:           0x"
+            << std::hex << std::setw(8) << std::setfill('0')
+            << hdr.magic << std::dec << "\n";
+  std::cout << "  Header version:  " << hdr.hdr_version << "\n";
+  std::cout << "  Header size:     " << hdr.header_size << "\n";
+  std::cout << "  Entry hdr size:  " << hdr.entry_header_size << "\n";
+  std::cout << "  Version:         "
+            << hdr.version_major << "."
+            << hdr.version_minor << "."
+            << hdr.version_bugfix << "\n";
+  std::cout << "  File size word:  " << hdr.file_size << "\n";
+  std::cout << "  Sections:        " << entries.size() << "\n\n";
+
+  for (const PLFEntry &e : entries) {
+    std::cout << "  ["
+              << std::setw(2) << std::setfill('0') << e.index
+              << "] off=0x"
+              << std::hex << std::setw(8) << std::setfill('0')
+              << e.offset << std::dec
+              << " type=0x" << hex2(e.h.type)
+              << " size=" << e.h.size
+              << " crc=0x"
+              << std::hex << std::setw(8)
+              << std::setfill('0') << e.h.crc
+              << std::dec
+              << " loadaddr=0x"
+              << std::hex << std::setw(8)
+              << std::setfill('0') << e.h.loadaddr
+              << std::dec
+              << " usize=" << e.h.usize
+              << "\n";
+  }
+
+  uint32_t crc = recompute_header_crc(data, hdr);
+
+  std::cout << "\n  header_crc_seed: 0x"
+            << std::hex << std::setw(8)
+            << std::setfill('0') << hdr.header_crc_seed
+            << "\n";
+  std::cout << "  recomputed CRC : 0x"
+            << std::hex << std::setw(8)
+            << std::setfill('0') << crc
+            << "\n";
+  std::cout << "  CRC match       : "
+            << std::dec << (crc == hdr.header_crc_seed)
+            << "\n";
 }
 
 int main(int argc, char **argv)
 {
-  if (argc < 2) {
-    print_usage(std::string(argv[0]));
+  if (argc != 3) {
+    std::cerr << "usage: " << argv[0] << " info plf_file\n";
     return 1;
   }
 
-  std::string prog = argv[0];
-  std::string cmd  = argv[1];
+  std::string cmd = argv[1];
 
-  if (cmd == "info") {
-    if (argc != 3) {
-      print_usage(prog);
-      return 1;
-    }
-    plf_info(argv[2]);
+  if (cmd != "info") {
+    std::cerr << "usage: " << argv[0] << " info plf_file\n";
+    return 1;
   }
+
+  cmd_info(argv[2]);
 
   return 0;
 }
+
 
 
