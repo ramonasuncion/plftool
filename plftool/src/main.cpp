@@ -46,6 +46,14 @@ struct PLFEntryHeader {
   }
 };
 
+struct PLFEntry {
+  int index;
+  PLFEntryHeader h;
+  uint32_t offset;
+  uint32_t data_offset;
+  std::vector<std::byte> data;
+};
+
 static std::vector<std::byte> read_file(const std::string &path)
 {
   std::ifstream f(path, std::ios::binary);
@@ -106,6 +114,67 @@ static uint32_t crc_finalize(uint32_t crc, uint32_t count)
   return (~crc) & 0xFFFFFFFF;
 }
 
+static std::pair<PLFHeader, std::vector<PLFEntry>>
+parse_plf(const std::vector<std::byte> &buf)
+{
+  if (buf.size() < 56) {
+    std::cerr << "err: file too small\n";
+    std::exit(1);
+  }
+
+  PLFHeader hdr = PLFHeader::parse(buf.data());
+
+  if (hdr.magic != 0x21464C50) {
+    std::cerr << "err: magic\n";
+    std::exit(1);
+  }
+
+  if (hdr.file_size != buf.size()) {
+    std::cerr << "err: size\n";
+    std::exit(1);
+  }
+
+  if (hdr.entry_header_size != 0x14) {
+    std::cerr << "err: entry_header_size\n";
+    std::exit(1);
+  }
+
+  std::vector<PLFEntry> entries;
+  uint32_t offset = hdr.header_size;
+  int i = 0;
+
+  while (offset < hdr.file_size) {
+    if (offset + hdr.entry_header_size > hdr.file_size) {
+      std::cerr << "err: out of bounds\n";
+      std::exit(1);
+    }
+
+    const std::byte *ehp = buf.data() + offset;
+    PLFEntryHeader eh = PLFEntryHeader::parse(ehp);
+
+    uint32_t data_off = offset + hdr.entry_header_size;
+    if (data_off + eh.size > hdr.file_size) {
+      std::cerr << "err: out of bounds\n";
+      std::exit(1);
+    }
+
+    PLFEntry e;
+    e.index = i;
+    e.h = eh;
+    e.offset = offset;
+    e.data_offset = data_off;
+
+    e.data.assign(buf.begin() + data_off, buf.begin() + data_off + eh.size);
+
+    entries.push_back(e);
+
+    uint32_t total = hdr.entry_header_size + eh.size;
+    offset = (offset + total + 3) & ~3;
+    i++;
+  }
+
+  return { hdr, entries };
+}
 
 static void plf_info(const std::filesystem::path &p)
 {
