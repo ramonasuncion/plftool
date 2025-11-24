@@ -51,16 +51,15 @@ static std::vector<std::byte> read_file(const std::string &path)
   std::ifstream f(path, std::ios::binary);
   if (!f) {
     std::cerr << "err: cannot open file '" << path << "'\n";
-    exit(1);
+    std::exit(1);
   }
 
-  f.seekg(0, std::ios::end);
-  std::streamsize s = f.tellg();
-  f.seekg(0, std::ios::beg);
+  std::vector<char> tmp((std::istreambuf_iterator<char>(f)),
+      std::istreambuf_iterator<char>());
 
-  std::vector<std::byte> out(s);
-  if (s > 0)
-    f.read(reinterpret_cast<char*>(out.data()), s);
+  std::vector<std::byte> out(tmp.size());
+  if (!tmp.empty())
+    std::memcpy(out.data(), tmp.data(), tmp.size());
 
   return out;
 }
