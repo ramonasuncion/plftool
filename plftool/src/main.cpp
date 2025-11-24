@@ -176,6 +176,68 @@ parse_plf(const std::vector<std::byte> &buf)
   return { hdr, entries };
 }
 
+static uint32_t
+recompute_header_crc(const std::vector<std::byte> &buf, const PLFHeader &hdr)
+{
+  uint32_t crc = 0;
+  uint32_t count = 0;
+
+  if (hdr.header_size > buf.size()) {
+    std::cerr << "err: header_size too large\n";
+    std::exit(1);
+  }
+
+  std::vector<std::byte> head(buf.begin(),
+      buf.begin() + hdr.header_size);
+
+  uint32_t z  = 0;
+  if (hdr.header_size >= 0x24)
+    std::memcpy(head.data() + 0x20, &z, 4);
+
+  crc_update(crc, count, head);
+
+  uint32_t offset = hdr.header_size;
+  bool seen_last = false;
+  uint32_t saved_crc = 0;
+  uint32_t saved_count = 0;
+
+  while (offset < hdr.file_size) {
+    if (offset + hdr.entry_header_size > hdr.file_size) {
+      std::cerr << "err: entry header out of bounds "
+        "while recomputing CRC\n";
+      std::exit(1);
+    }
+
+    const std::byte *ehp = buf.data() + offset;
+    PLFEntryHeader eh = PLFEntryHeader::parse(ehp);
+
+    if (!seen_last) {
+      saved_crc = crc;
+      saved_count = count;
+    }
+
+    std::vector<std::byte> chunk(buf.begin() + offset,
+        buf.begin() + offset +
+        hdr.entry_header_size);
+
+    crc_update(crc, count, chunk);
+
+    uint32_t total = hdr.entry_header_size + eh.size;
+    offset = (offset + total + 3) & ~3;
+
+    if (eh.type == 0x0D)
+      seen_last = true;
+  }
+
+  if (seen_last) {
+    crc = saved_crc;
+    count = saved_count;
+  }
+
+  return crc_finalize(crc, count);
+}
+
+
 static void plf_info(const std::filesystem::path &p)
 {
   auto data = read_file(p);
