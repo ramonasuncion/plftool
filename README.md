@@ -2,6 +2,7 @@
 
 > [!WARNING]
 > For educational and research purposes only. Follow all local laws.
+> I’m not responsible if you damage or brick your drone.
 
 <img src="https://www.kindpng.com/picc/m/713-7130959_parrot-mini-drone-airborne-night-swat-transp-hd.png" alt="Parrot Mini Drone Airborne Night Swat Transp, HD Png Download@kindpng.com">
 
