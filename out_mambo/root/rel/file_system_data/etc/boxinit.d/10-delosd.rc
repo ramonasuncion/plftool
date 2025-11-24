@@ -1,2 +1,0 @@
-service delosd /usr/bin/delosd
-    class main

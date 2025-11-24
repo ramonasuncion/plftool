@@ -1,9 +1,0 @@
-service telnetd /usr/bin/ulogwrapper /usr/sbin/telnetd -S -F -l /bin/login.sh
-    disabled
-
-on property:debug.enabled=0
-    stop telnetd
-
-on property:debug.enabled=1
-    start telnetd
-
