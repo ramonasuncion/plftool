@@ -5,6 +5,47 @@
 #include <fstream>
 #include "plf_crc_table.hpp"
 
+#pragma pack(push, 1)
+struct PLFHeader {
+  uint32_t magic;
+  uint32_t hdr_version;
+  uint32_t header_size;
+  uint32_t entry_header_size;
+  uint32_t unk_10;
+  uint32_t unk_14;
+  uint32_t unk_18;
+  uint32_t unk_1C;
+  uint32_t header_crc_seed;
+  uint32_t version_major;
+  uint32_t version_minor;
+  uint32_t version_bugfix;
+  uint32_t unk_30;
+  uint32_t file_size;
+
+  static PLFHeader parse(const std::byte *buf)
+  {
+    PLFHeader h;
+    std::memcpy(&h, buf, 56);
+    return h;
+  }
+};
+#pragma pack(pop)
+
+struct PLFEntryHeader {
+  uint32_t type;
+  uint32_t size;
+  uint32_t crc;
+  uint32_t loadaddr;
+  uint32_t usize;
+
+  static PLFEntryHeader parse(const std::byte *buf)
+  {
+    PLFEntryHeader h;
+    std::memcpy(&h, buf, 20);
+    return h;
+  }
+};
+
 static std::vector<std::byte> read_file(const std::string &path)
 {
   std::ifstream f(path, std::ios::binary);
