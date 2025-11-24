@@ -1,9 +1,6 @@
 [submodule "binaryanalysis-ng"]
 	path = binaryanalysis-ng
 	url = https://github.com/armijnhemel/binaryanalysis-ng
-[submodule "cramfs-tools"]
-	path = cramfs-tools
-	url = git@github.com:npitre/cramfs-tools.git
 [submodule "airborne-cargo-drone"]
 	path = airborne-cargo-drone
 	url = https://github.com/SteveClement/airborne-cargo-drone
