@@ -81,6 +81,31 @@ static void write_file(const std::string &path, const std::vector<std::byte> &bu
   }
 }
 
+static void
+crc_update(uint32_t &crc, uint32_t &count, const std::vector<std::byte> &data)
+{
+  for (std::byte b : data) {
+    uint8_t v = static_cast<uint8_t>(b);
+    uint32_t idx = (v ^ (crc >> 24)) & 0xFF;
+
+    crc = (plf_crc_table[idx] ^ ((crc << 8) & 0xFFFFFFFF)) & 0xFFFFFFFF;
+  }
+
+  count = (count + static_cast<uint32_t>(data.size())) & 0xFFFFFFFF;
+}
+
+static uint32_t crc_finalize(uint32_t crc, uint32_t count)
+{
+  while (count) {
+    uint32_t idx = (count ^ (crc >> 24)) & 0xFF;
+    crc = (plf_crc_table[idx] ^ ((crc << 8) & 0xFFFFFFFF))
+      & 0xFFFFFFFF;
+    count >>= 8;
+  }
+
+  return (~crc) & 0xFFFFFFFF;
+}
+
 
 static void plf_info(const std::filesystem::path &p)
 {
