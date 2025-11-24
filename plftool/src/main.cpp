@@ -80,17 +80,17 @@ static std::vector<std::byte> read_file(const std::string &path)
 
 static void write_file(const std::string &path, const std::vector<std::byte> &buf)
 {
-  std::ofstream f(p, std::ios::binary);
+  std::ofstream f(path, std::ios::binary);
   if (!f) {
-    std::cerr << "err: cannot open file '" << path << "'\n";
-    exit(1);
+    std::cerr << "err: cannot open file for writing '" << path << "'\n";
+    std::exit(1);
   }
 
-  if (!buf.empty()) { 
-    f.write(reinterpret_cast<const char*>(buf.data()), buf.size());
+  if (!buf.empty()) {
+    f.write(reinterpret_cast<const char *>(buf.data()), buf.size());
     if (!f) {
-      std::cerr << "err: failed to write file '" << path << "'\n";
-      exit(1);
+      std::cerr << "err: failed while writing '" << path << "'\n";
+      std::exit(1);
     }
   }
 }
