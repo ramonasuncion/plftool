@@ -14,6 +14,11 @@ This document collects my finding about the Parrot **Airborne Night (SWAT)** fir
 
 I have a Parrot Airborne Night Drone that my brother gave me about 8 years ago. The company [ditched consumer drones](https://www.digitalcameraworld.com/news/parrot-ditches-consumer-drones-and-its-profits-take-off) in 2021 but it's making huge profits on B2B.
 
+**DO NOT EXPECT FOR SUPPORT FROM PARROT**
+
+<img width="705" height="180" alt="Screenshot 2025-11-24 at 8 23 05 PM" src="https://github.com/user-attachments/assets/1617644a-74de-4c73-a0e2-83c9db6ffa97" />
+
+
 ## Offical firmware
 
 You can find the offical firmware for the Parrot Airborne on the [Parrot site](https://www.parrot.com/en/support/documentation/airborne).
