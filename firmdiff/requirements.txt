@@ -1,0 +1,6 @@
+typer
+construct
+lief
+capstone
+numpy
+dictdiffer

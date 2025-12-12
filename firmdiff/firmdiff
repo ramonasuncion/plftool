@@ -1,0 +1,274 @@
+#!/usr/bin/env python3
+# DISCLAIMER: Some parts of this file were generated with the help of a LLM.
+import gzip
+import hashlib
+import typer
+from construct import Struct, Int32ul
+import lief
+
+app = typer.Typer()
+
+PLFHeader = Struct(
+    "magic" / Int32ul,
+    "hdr_version" / Int32ul,
+    "header_size" / Int32ul,
+    "entry_header_size" / Int32ul,
+    "unk_10" / Int32ul,
+    "unk_14" / Int32ul,
+    "unk_18" / Int32ul,
+    "unk_1C" / Int32ul,
+    "header_crc_seed" / Int32ul,
+    "version_major" / Int32ul,
+    "version_minor" / Int32ul,
+    "version_bugfix" / Int32ul,
+    "unk_30" / Int32ul,
+    "file_size" / Int32ul,
+)
+
+PLFEntryHeader = Struct(
+    "type" / Int32ul,
+    "size" / Int32ul,
+    "crc" / Int32ul,
+    "extra" / Int32ul,
+    "usize" / Int32ul,
+)
+
+
+def load_file(path):
+    b = open(path, "rb").read()
+
+    if len(b) >= 2 and b[:2] == b"\x1f\x8b":
+        try:
+            b = gzip.decompress(b)
+        except:
+            pass
+
+    return b
+
+
+def sha(x):
+    return hashlib.sha256(x).hexdigest()
+
+
+def parse_plf(buf):
+    if len(buf) < PLFHeader.sizeof():
+        return None
+
+    try:
+        h = PLFHeader.parse(buf)
+    except:
+        return None
+
+    if h.magic != 0x21464C50:
+        return None
+
+    header = {sc.name: int(getattr(h, sc.name)) for sc in PLFHeader.subcons}
+
+    entries = []
+    off = header["header_size"]
+    eh = header["entry_header_size"]
+    n = len(buf)
+
+    while off + eh <= n:
+        try:
+            ehdr = PLFEntryHeader.parse(buf[off : off + eh])
+        except:
+            break
+
+        data_off = off + eh
+        data_end = data_off + int(ehdr.size)
+
+        if data_end > n:
+            break
+
+        data = buf[data_off:data_end]
+
+        entries.append(
+            {
+                "header": {
+                    sc.name: int(getattr(ehdr, sc.name))
+                    for sc in PLFEntryHeader.subcons
+                },
+                "data": data,
+                "offset": off,
+            }
+        )
+
+        off = (data_end + 3) & ~3
+
+    return {"header": header, "entries": entries}
+
+
+def extract_plf_entries(path):
+    buf = load_file(path)
+    plf = parse_plf(buf)
+
+    if not plf:
+        return []
+
+    return plf["entries"]
+
+
+def extract_functions(path):
+    try:
+        b = lief.parse(path)
+
+        if not b:
+            return []
+
+        out = []
+
+        for f in getattr(b, "functions", []):
+            out.append(
+                {
+                    "name": f.name,
+                    "start": f.address,
+                    "size": f.size,
+                    "sha": sha(
+                        bytes(b.get_content_from_virtual_address(f.address, f.size))
+                    ),
+                }
+            )
+
+        return out
+
+    except:
+        return []
+
+
+def extract_symbols(path):
+    try:
+        b = lief.parse(path)
+
+        if not b:
+            return []
+
+        return [{"name": s.name, "addr": s.value} for s in getattr(b, "symbols", [])]
+
+    except:
+        return []
+
+
+def compare_lists(list1, list2, key):
+    added = []
+    removed = []
+
+    dict1 = {key(x): x for x in list1}
+    dict2 = {key(x): x for x in list2}
+
+    for k in dict2:
+        if k not in dict1:
+            added.append(dict2[k])
+
+    for k in dict1:
+        if k not in dict2:
+            removed.append(dict1[k])
+
+    return added, removed
+
+
+def compare_firmwares(file1, file2):
+    plf1 = extract_plf_entries(file1)
+    plf2 = extract_plf_entries(file2)
+
+    fun1 = extract_functions(file1)
+    fun2 = extract_functions(file2)
+
+    sym1 = extract_symbols(file1)
+    sym2 = extract_symbols(file2)
+
+    plf_added, plf_removed = compare_lists(plf1, plf2, lambda x: sha(x["data"]))
+    fun_added, fun_removed = compare_lists(fun1, fun2, lambda x: x["sha"])
+    sym_added, sym_removed = compare_lists(sym1, sym2, lambda x: x["name"])
+    return {
+        "plf_entries_added": [
+            {
+                "file": file2,
+                "offset": e["offset"],
+                "size": e["header"]["size"],
+                "sha": sha(e["data"]),
+            }
+            for e in plf_added
+        ],
+        "plf_entries_removed": [
+            {
+                "file": file1,
+                "offset": e["offset"],
+                "size": e["header"]["size"],
+                "sha": sha(e["data"]),
+            }
+            for e in plf_removed
+        ],
+        "functions_added": [
+            {
+                "file": file2,
+                "name": f["name"],
+                "start": f["start"],
+                "size": f["size"],
+                "sha": f["sha"],
+            }
+            for f in fun_added
+        ],
+        "functions_removed": [
+            {
+                "file": file1,
+                "name": f["name"],
+                "start": f["start"],
+                "size": f["size"],
+                "sha": f["sha"],
+            }
+            for f in fun_removed
+        ],
+        "symbols_added": [
+            {
+                "file": file2,
+                "name": s["name"],
+                "addr": s["addr"],
+            }
+            for s in sym_added
+        ],
+        "symbols_removed": [
+            {
+                "file": file1,
+                "name": s["name"],
+                "addr": s["addr"],
+            }
+            for s in sym_removed
+        ],
+    }
+
+
+def format_diff(d):
+    out = []
+
+    for k in [
+        "plf_entries_added",
+        "plf_entries_removed",
+        "functions_added",
+        "functions_removed",
+        "symbols_added",
+        "symbols_removed",
+    ]:
+        if d[k]:
+            out.append(f"{k.replace('_', ' ').title()}:")
+
+            for e in d[k]:
+                line = "  - "
+
+                for f, v in e.items():
+                    line += f"{f}={v} "
+
+                out.append(line.strip())
+
+    return "\n".join(out)
+
+
+@app.command()
+def compare(file1: str, file2: str):
+    diff_report = compare_firmwares(file1, file2)
+    output = format_diff(diff_report)
+    print(output)
+
+
+if __name__ == "__main__":
+    app()
