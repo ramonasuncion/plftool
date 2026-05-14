@@ -5,3 +5,4 @@
 *.rep
 out_*/
 original/
+firmware/*.plf
