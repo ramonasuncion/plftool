@@ -1,8 +1,8 @@
-CXXFLAGS = -Isrc -std=c++20 -O2 -Wall -Wextra # -g -DDEBUG
-
-CXXFLAGS += -Wall -Wextra -Wpedantic \
-						-Wformat=2 -Wno-unused-parameter -Wshadow \
-						-Wwrite-strings -Wmissing-include-dirs
+CXXFLAGS = -Isrc -std=c++20 -O2 \
+           -Wall -Wextra -Wpedantic \
+           -Wformat=2 -Wno-unused-parameter -Wshadow \
+           -Wwrite-strings -Wmissing-include-dirs
+           # -g -DDEBUG
 
 SRC = src
 BIN = bin
