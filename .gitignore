@@ -3,3 +3,5 @@
 *.lock
 *.gpr
 *.rep
+out_*/
+original/
