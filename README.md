@@ -51,3 +51,9 @@ The Airborne Night can't create a IP network over bluetooth (no [BNEP](https://w
 > One could try to hack a Mambo firmware on the Airborne Night types somehow.
 
 I want to be able to create a library similar to [minidrone found in Go](https://pkg.go.dev/github.com/eric-erki/gobot/platforms/parrot/minidrone#section-readme) but supporting a custom firmware. Unfortunately, there isn't any SDK you can install to make this easier, such as [MathWorks Parrot Minidrone Support](https://www.mathworks.com/hardware-support/parrot-minidrones.html).
+
+## Useful links
+
+- https://www.parrot.com/en/support/documentation
+- https://github.com/parrot-developers
+
