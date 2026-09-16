@@ -796,6 +796,7 @@ static std::vector<std::byte> rebuild_dec_from_extracted_rootfs(
     return result;
   }
 
+  std::vector<std::filesystem::path> dirs;
   std::vector<std::filesystem::path> files;
   std::vector<std::filesystem::path> symlinks;
 
@@ -808,8 +809,16 @@ static std::vector<std::byte> rebuild_dec_from_extracted_rootfs(
       symlinks.push_back(iter_entry.path());
     } else if (std::filesystem::is_regular_file(status)) {
       files.push_back(iter_entry.path());
+    } else if (std::filesystem::is_directory(status) &&
+        std::filesystem::is_empty(iter_entry.path(), ec)) {
+      dirs.push_back(iter_entry.path());
     }
-    // The dirs come back on their own from the paths under them
+    // The dirs with children come back on their own from the paths under them
+  }
+
+  std::sort(dirs.begin(), dirs.end());
+  for (const auto& dir : dirs) {
+    add_entry_to_archive(result, entry_root, dir);
   }
 
   // A sort keeps the output the same from run to run
@@ -865,51 +874,20 @@ cmd_pack(const std::string &manifest, const std::string &out, bool use_original)
 
     uint32_t type = je["type"];
 
-    if (type == 9) {
-      std::vector<std::byte> plain;
+    std::filesystem::path entry_root =
+      extracted_root / ("entry_" + std::to_string(je["index"].get<int>()));
 
-      if (!use_original && je.contains("dec_file")) {
-        // This picks up any edits made to the unpacked files
-        int entry_idx = je["index"];
-        plain = rebuild_dec_from_extracted_rootfs(extracted_root, entry_idx);
+    if (type == 9 && !use_original && std::filesystem::exists(entry_root)) {
+      // This picks up any edits made to the unpacked files
+      std::vector<std::byte> plain =
+        rebuild_dec_from_extracted_rootfs(extracted_root, je["index"]);
 
-        // The original entry might be stored raw so only gzip when it wasn't
-        if (!plain.empty() && je["usize"] != 0) {
-          data = gzip_compress(plain);
-          usize = static_cast<uint32_t>(plain.size());
-        } else {
-          data = plain;
-          usize = static_cast<uint32_t>(plain.size());
-        }
-      } else if (je.contains("dec_file")) {
-        // The original blob gets reused so the output matches byte for byte
-        std::string bin_path = (manifest_dir / je["file"].get<std::string>()).string();
-        data = read_file(bin_path);
-        usize = je["usize"];
+      // The original entry might be stored raw so only gzip when it wasn't
+      if (je["usize"] != 0) {
+        data = gzip_compress(plain);
+        usize = static_cast<uint32_t>(plain.size());
       } else {
-        std::string bin_path = (manifest_dir / je["file"].get<std::string>()).string();
-        std::vector<std::byte> original_bin = read_file(bin_path);
-
-        if (je["usize"] != 0) {
-          try {
-            plain = gzip_decompress(original_bin, je["usize"]);
-          } catch (...) {
-            plain = original_bin;
-          }
-        } else {
-          plain = original_bin;
-        }
-
-        if (!plain.empty()) {
-          if (!use_original) {
-            // That recompress runs since no unpacked tree exists for this entry
-            data = gzip_compress(plain);
-            usize = static_cast<uint32_t>(plain.size());
-          } else {
-            data = plain;
-            usize = je["usize"];
-          }
-        }
+        data = plain;
       }
     } else {
       std::string file = (manifest_dir / je["file"].get<std::string>()).string();
