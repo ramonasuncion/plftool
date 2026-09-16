@@ -573,8 +573,11 @@ static void extract_type09_entry(const std::vector<std::byte>& dec, const std::f
 
   std::filesystem::path out_path = entry_root / entry_name;
 
+  auto entry_perms = static_cast<std::filesystem::perms>(entry_flags & 07777);
+
   if (entry_filetype == 0x4) {
     std::filesystem::create_directories(out_path);
+    std::filesystem::permissions(out_path, entry_perms);
     std::cout << "[type-09] Entry " << entry_index << " Directory: " << out_path << std::endl;
   } else if (entry_filetype == 0x8) {
     size_t file_data_start = pos + 12;
@@ -587,6 +590,7 @@ static void extract_type09_entry(const std::vector<std::byte>& dec, const std::f
 
     std::vector<std::byte> file_data(dec.begin() + file_data_start, dec.end());
     write_file(out_path.string(), file_data);
+    std::filesystem::permissions(out_path, entry_perms);
     std::cout << "[type-09] Entry " << entry_index << " File: " << out_path << " (" << file_data.size() << " bytes)" << std::endl;
   } else if (entry_filetype == 0xA) {
     size_t target_start = pos + 12;
@@ -732,52 +736,32 @@ static void add_entry_to_archive(std::vector<std::byte>& result,
   std::error_code ec;
   auto status = std::filesystem::symlink_status(entry_path, ec);
 
+  uint32_t mode_bits = static_cast<uint32_t>(status.permissions()) & 07777;
+  uint32_t flags = 0;
+  if (std::filesystem::is_symlink(status))
+    flags = 0xA000 | mode_bits;
+  else if (std::filesystem::is_directory(status))
+    flags = 0x4000 | mode_bits;
+  else if (std::filesystem::is_regular_file(status))
+    flags = 0x8000 | mode_bits;
+  else
+    return;
+
+  for (int i = 0; i < 4; ++i)
+    result.push_back(static_cast<std::byte>((flags >> (8 * i)) & 0xFF));
+
+  // The two words after the mode are always zero in stock firmware
+  for (int i = 0; i < 8; ++i)
+    result.push_back(static_cast<std::byte>(0));
+
   if (std::filesystem::is_symlink(status)) {
-    uint32_t flags = 0xA000;
-    result.push_back(static_cast<std::byte>(flags & 0xFF));
-    result.push_back(static_cast<std::byte>((flags >> 8) & 0xFF));
-    result.push_back(static_cast<std::byte>((flags >> 16) & 0xFF));
-    result.push_back(static_cast<std::byte>((flags >> 24) & 0xFF));
-
-    for (int i = 0; i < 8; ++i) {
-      result.push_back(static_cast<std::byte>(0));
-    }
-
     auto target = std::filesystem::read_symlink(entry_path, ec);
     std::string target_str = target.string();
     for (char c : target_str) {
       result.push_back(static_cast<std::byte>(c));
     }
     result.push_back(static_cast<std::byte>(0));
-
-  } else if (std::filesystem::is_directory(status)) {
-    uint32_t flags = 0x4000;
-    result.push_back(static_cast<std::byte>(flags & 0xFF));
-    result.push_back(static_cast<std::byte>((flags >> 8) & 0xFF));
-    result.push_back(static_cast<std::byte>((flags >> 16) & 0xFF));
-    result.push_back(static_cast<std::byte>((flags >> 24) & 0xFF));
-
-    for (int i = 0; i < 8; ++i) {
-      result.push_back(static_cast<std::byte>(0));
-    }
-
   } else if (std::filesystem::is_regular_file(status)) {
-    uint32_t flags = 0x8000;
-    result.push_back(static_cast<std::byte>(flags & 0xFF));
-    result.push_back(static_cast<std::byte>((flags >> 8) & 0xFF));
-    result.push_back(static_cast<std::byte>((flags >> 16) & 0xFF));
-    result.push_back(static_cast<std::byte>((flags >> 24) & 0xFF));
-
-    auto file_size = std::filesystem::file_size(entry_path, ec);
-    result.push_back(static_cast<std::byte>(file_size & 0xFF));
-    result.push_back(static_cast<std::byte>((file_size >> 8) & 0xFF));
-    result.push_back(static_cast<std::byte>((file_size >> 16) & 0xFF));
-    result.push_back(static_cast<std::byte>((file_size >> 24) & 0xFF));
-
-    for (int i = 0; i < 4; ++i) {
-      result.push_back(static_cast<std::byte>(0));
-    }
-
     std::vector<std::byte> file_data = read_file(entry_path.string());
     result.insert(result.end(), file_data.begin(), file_data.end());
   }
