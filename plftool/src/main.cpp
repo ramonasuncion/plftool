@@ -175,8 +175,7 @@ static void crc_update(uint32_t &crc,
 
 static uint32_t crc_finalize(uint32_t crc, uint32_t count)
 {
-  // Process count as a 32-bit value (big-endian order), matching ardrone-tool
-  // This is equivalent to crc32_calc_dw(&crc, &count) in the reference
+  // The count gets mixed in byte by byte so the CRC matches the reference tool
   uint32_t value = count;
 
   if (value == 0) {
@@ -810,16 +809,16 @@ static std::vector<std::byte> rebuild_dec_from_extracted_rootfs(
     } else if (std::filesystem::is_regular_file(status)) {
       files.push_back(iter_entry.path());
     }
-    // Skip directories - they are implied by file/symlink paths
+    // The dirs come back on their own from the paths under them
   }
 
-  // Add files first (sorted for consistent output)
+  // A sort keeps the output the same from run to run
   std::sort(files.begin(), files.end());
   for (const auto& file : files) {
     add_entry_to_archive(result, entry_root, file);
   }
 
-  // Then symlinks (sorted for consistent output)
+  // The symlinks go last and get sorted for the same reason
   std::sort(symlinks.begin(), symlinks.end());
   for (const auto& symlink : symlinks) {
     add_entry_to_archive(result, entry_root, symlink);
@@ -870,11 +869,11 @@ cmd_pack(const std::string &manifest, const std::string &out, bool use_original)
       std::vector<std::byte> plain;
 
       if (!use_original && je.contains("dec_file")) {
-        // Rebuild from extracted_rootfs (allows modification)
+        // This picks up any edits made to the unpacked files
         int entry_idx = je["index"];
         plain = rebuild_dec_from_extracted_rootfs(extracted_root, entry_idx);
 
-        // Compress the rebuilt data
+        // The original entry might be stored raw so only gzip when it wasn't
         if (!plain.empty() && je["usize"] != 0) {
           data = gzip_compress(plain);
           usize = static_cast<uint32_t>(plain.size());
@@ -883,7 +882,7 @@ cmd_pack(const std::string &manifest, const std::string &out, bool use_original)
           usize = static_cast<uint32_t>(plain.size());
         }
       } else if (je.contains("dec_file")) {
-        // Use original compressed data (bit-identical output)
+        // The original blob gets reused so the output matches byte for byte
         std::string bin_path = (manifest_dir / je["file"].get<std::string>()).string();
         data = read_file(bin_path);
         usize = je["usize"];
@@ -903,7 +902,7 @@ cmd_pack(const std::string &manifest, const std::string &out, bool use_original)
 
         if (!plain.empty()) {
           if (!use_original) {
-            // Rebuild and recompress
+            // That recompress runs since no unpacked tree exists for this entry
             data = gzip_compress(plain);
             usize = static_cast<uint32_t>(plain.size());
           } else {
