@@ -2,6 +2,8 @@
 
 Parrot PLF firmware inspection tool.
 
+It can't add new files to the firmware yet. The pack command only rebuilds entries that are already in the manifest.
+
 ## References
 
 - [PLF file format](https://embedded-software.blogspot.com/2010/12/plf-file-format.html)
