@@ -1,9 +1,18 @@
 [submodule "binaryanalysis-ng"]
-	path = binaryanalysis-ng
+	path = vendor/binaryanalysis-ng
 	url = https://github.com/armijnhemel/binaryanalysis-ng
 [submodule "airborne-cargo-drone"]
-	path = airborne-cargo-drone
+	path = vendor/airborne-cargo-drone
 	url = https://github.com/SteveClement/airborne-cargo-drone
 [submodule "ardrone-tool"]
-	path = ardrone-tool
+	path = vendor/ardrone-tool
 	url = https://github.com/scorp2kk/ardrone-tool
+[submodule "vendor/rollingspider-opensource"]
+	path = vendor/rollingspider-opensource
+	url = https://github.com/parrot-opensource/rollingspider-opensource
+[submodule "vendor/mambo-opensource"]
+	path = vendor/mambo-opensource
+	url = https://github.com/parrot-opensource/mambo-opensource
+[submodule "vendor/swing-opensource"]
+	path = vendor/swing-opensource
+	url = https://github.com/parrot-opensource/swing-opensource
