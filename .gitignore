@@ -6,3 +6,4 @@
 out_*/
 original/
 firmware/
+!uv.lock
