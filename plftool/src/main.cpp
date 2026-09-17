@@ -33,14 +33,16 @@ struct PLFHeader {
   uint32_t unk_30;
   uint32_t file_size;
 
-  static PLFHeader parse(const std::byte *buf)
+  static PLFHeader
+  parse(const std::byte *buf)
   {
     PLFHeader h;
     std::memcpy(&h, buf, 56);
     return h;
   }
 
-  std::vector<std::byte> pack() const
+  std::vector<std::byte>
+  pack() const
   {
     std::vector<std::byte> v(56);
     std::memcpy(v.data(), this, 56);
@@ -57,14 +59,16 @@ struct PLFEntryHeader {
   uint32_t extra;
   uint32_t usize;
 
-  static PLFEntryHeader parse(const std::byte *buf)
+  static PLFEntryHeader
+  parse(const std::byte *buf)
   {
     PLFEntryHeader h;
     std::memcpy(&h, buf, 20);
     return h;
   }
 
-  std::vector<std::byte> pack() const
+  std::vector<std::byte>
+  pack() const
   {
     std::vector<std::byte> v(20);
     std::memcpy(v.data(), this, 20);
@@ -81,7 +85,8 @@ struct PLFEntry {
   std::vector<std::byte> data;
 };
 
-static void print_usage(const std::string &prog)
+static void
+print_usage(const std::string &prog)
 {
   std::cerr << "usage: " << prog << " info plf_file\n";
   std::cerr << "       " << prog << " unpack plf_file outdir\n";
@@ -103,7 +108,8 @@ static void print_usage(const std::string &prog)
   std::cerr << "  " << prog << " pack --original out/manifest.json firmware_new.plf  # bit-identical\n";
 }
 
-static std::vector<std::byte> read_file(const std::string &path)
+static std::vector<std::byte>
+read_file(const std::string &path)
 {
   std::ifstream f(path, std::ios::binary);
   if (!f) {
@@ -121,7 +127,9 @@ static std::vector<std::byte> read_file(const std::string &path)
   return out;
 }
 
-static void write_file(const std::string &path, const std::vector<std::byte> &buf)
+static void
+write_file(const std::string &path,
+    const std::vector<std::byte> &buf)
 {
   std::ofstream f(path, std::ios::binary);
   if (!f) {
@@ -138,7 +146,8 @@ static void write_file(const std::string &path, const std::vector<std::byte> &bu
   }
 }
 
-static json read_json(const std::string &path)
+static json
+read_json(const std::string &path)
 {
   std::ifstream f(path);
   if (!f) {
@@ -159,7 +168,8 @@ static json read_json(const std::string &path)
   std::exit(1);
 }
 
-static void crc_update(uint32_t &crc,
+static void
+crc_update(uint32_t &crc,
     uint32_t &count,
     const std::vector<std::byte> &data)
 {
@@ -173,7 +183,8 @@ static void crc_update(uint32_t &crc,
   count = (count + static_cast<uint32_t>(data.size())) & 0xFFFFFFFF;
 }
 
-static uint32_t crc_finalize(uint32_t crc, uint32_t count)
+static uint32_t
+crc_finalize(uint32_t crc, uint32_t count)
 {
   // The count gets mixed in byte by byte so the CRC matches the reference tool
   uint32_t value = count;
@@ -191,7 +202,7 @@ static uint32_t crc_finalize(uint32_t crc, uint32_t count)
   return (~crc) & 0xFFFFFFFF;
 }
 
-  static std::pair<PLFHeader, std::vector<PLFEntry>>
+static std::pair<PLFHeader, std::vector<PLFEntry>>
 parse_plf(const std::vector<std::byte> &buf)
 {
   if (buf.size() < 56) {
@@ -254,7 +265,7 @@ parse_plf(const std::vector<std::byte> &buf)
   return {hdr, entries};
 }
 
-  static uint32_t
+static uint32_t
 recompute_header_crc(const std::vector<std::byte> &buf,
     const PLFHeader &hdr)
 {
@@ -316,7 +327,8 @@ recompute_header_crc(const std::vector<std::byte> &buf,
   return crc_finalize(crc, count);
 }
 
-static std::string hex2(uint32_t v)
+static std::string
+hex2(uint32_t v)
 {
   std::ostringstream oss;
   oss << std::uppercase << std::hex
@@ -325,7 +337,8 @@ static std::string hex2(uint32_t v)
   return oss.str();
 }
 
-static bool is_gzip(const std::vector<std::byte> &data)
+static bool
+is_gzip(const std::vector<std::byte> &data)
 {
   if (data.size() < 3)
     return false;
@@ -337,7 +350,7 @@ static bool is_gzip(const std::vector<std::byte> &data)
   return b0 == 0x1f && b1 == 0x8b && b2 == 0x08;
 }
 
-  static std::vector<std::byte>
+static std::vector<std::byte>
 gzip_decompress(const std::vector<std::byte> &in, uint32_t expected_size)
 {
   if (in.empty()) {
@@ -383,7 +396,7 @@ gzip_decompress(const std::vector<std::byte> &in, uint32_t expected_size)
   return out;
 }
 
-  static std::vector<std::byte>
+static std::vector<std::byte>
 gzip_compress(const std::vector<std::byte> &in)
 {
   if (in.empty())
@@ -438,7 +451,8 @@ gzip_compress(const std::vector<std::byte> &in)
 }
 
 
-static void cmd_info(const std::string &path)
+static void
+cmd_info(const std::string &path)
 {
   std::vector<std::byte> data = read_file(path);
   auto parsed = parse_plf(data);
@@ -496,7 +510,10 @@ static void cmd_info(const std::string &path)
 }
 
 
-static void recursive_extract_fs(const std::filesystem::path &file_path, const std::filesystem::path &base_outdir, int depth = 0) {
+static void
+recursive_extract_fs(const std::filesystem::path &file_path,
+      const std::filesystem::path &base_outdir, int depth = 0)
+{
   if (depth > 8) return;
   if (!std::filesystem::is_regular_file(file_path)) return;
   std::vector<std::byte> file_data = read_file(file_path.string());
@@ -546,7 +563,10 @@ static void recursive_extract_fs(const std::filesystem::path &file_path, const s
   }
 }
 
-static void extract_type09_entry(const std::vector<std::byte>& dec, const std::filesystem::path& extracted_root, int entry_index) {
+static void
+extract_type09_entry(const std::vector<std::byte>& dec,
+    const std::filesystem::path& extracted_root, int entry_index)
+{
   if (dec.empty()) return;
 
   std::filesystem::path entry_root = extracted_root / ("entry_" + std::to_string(entry_index));
@@ -620,7 +640,7 @@ static void extract_type09_entry(const std::vector<std::byte>& dec, const std::f
   }
 }
 
-  static void
+static void
 cmd_unpack(const std::string &path, const std::string &outdir)
 {
   std::vector<std::byte> data = read_file(path);
@@ -651,8 +671,7 @@ cmd_unpack(const std::string &path, const std::string &outdir)
   manifest["header"] = h;
   manifest["entries"] = json::array();
 
-  std::string extracted_root = (std::filesystem::path(outdir) / "extracted_rootfs").string();
-  std::filesystem::create_directories(extracted_root);
+  std::string extracted_root = (std::filesystem::path(outdir) / "extracted_rootfs").string(); std::filesystem::create_directories(extracted_root);
 
   for (const PLFEntry &e : entries) {
     std::ostringstream oss;
@@ -716,10 +735,11 @@ cmd_unpack(const std::string &path, const std::string &outdir)
   }
 }
 
-static void add_entry_to_archive(std::vector<std::byte>& result,
+static void
+add_entry_to_archive(std::vector<std::byte>& result,
     const std::filesystem::path& base_dir,
-    const std::filesystem::path& entry_path) {
-
+    const std::filesystem::path& entry_path)
+{
   std::string relative_path = entry_path.string();
   if (relative_path.compare(0, base_dir.string().length(), base_dir.string()) == 0) {
     relative_path = relative_path.substr(base_dir.string().length());
@@ -756,10 +776,12 @@ static void add_entry_to_archive(std::vector<std::byte>& result,
 
   if (std::filesystem::is_symlink(status)) {
     auto target = std::filesystem::read_symlink(entry_path, ec);
+
     std::string target_str = target.string();
     for (char c : target_str) {
       result.push_back(static_cast<std::byte>(c));
     }
+
     result.push_back(static_cast<std::byte>(0));
   } else if (std::filesystem::is_regular_file(status)) {
     std::vector<std::byte> file_data = read_file(entry_path.string());
@@ -767,9 +789,10 @@ static void add_entry_to_archive(std::vector<std::byte>& result,
   }
 }
 
-static std::vector<std::byte> rebuild_dec_from_extracted_rootfs(
-    const std::filesystem::path& extracted_root, int entry_index) {
-
+static std::vector<std::byte>
+rebuild_dec_from_extracted_rootfs(const std::filesystem::path& extracted_root,
+                                    int entry_index)
+{
   std::vector<std::byte> result;
 
   std::error_code ec;
@@ -820,7 +843,7 @@ static std::vector<std::byte> rebuild_dec_from_extracted_rootfs(
   return result;
 }
 
-  static void
+static void
 cmd_pack(const std::string &manifest, const std::string &out, bool use_original)
 {
   json j = read_json(manifest);
@@ -940,7 +963,8 @@ cmd_pack(const std::string &manifest, const std::string &out, bool use_original)
 }
 
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
   if (argc < 2) {
     print_usage(argv[0]);
