@@ -4,6 +4,10 @@ Parrot PLF firmware inspection tool.
 
 It can't add new files to the firmware yet. The pack command only rebuilds entries that are already in the manifest.
 
+## Future features
+
+- A `map unpack_dir fs_root` command that merges the unpacked entries into one root filesystem
+
 ## References
 
 - [PLF file format](https://embedded-software.blogspot.com/2010/12/plf-file-format.html)

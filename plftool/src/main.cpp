@@ -91,7 +91,6 @@ print_usage(const std::string &prog)
   std::cerr << "usage: " << prog << " info plf_file\n";
   std::cerr << "       " << prog << " unpack plf_file outdir\n";
   std::cerr << "       " << prog << " pack [--original] manifest out_plf\n";
-  std::cerr << "       " << prog << " map unpack_dir fs_root\n";
   std::cerr << "\n";
   std::cerr << "Commands:\n";
   std::cerr << "  info    Show PLF file information\n";
