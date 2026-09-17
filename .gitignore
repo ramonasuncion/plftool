@@ -8,3 +8,4 @@ original/
 firmware/
 !uv.lock
 toolchains/
+docs/emulation.md
