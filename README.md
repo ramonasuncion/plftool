@@ -57,4 +57,5 @@ I want to be able to create a library similar to [minidrone found in Go](https:/
 - https://www.parrot.com/en/support/documentation
 - https://github.com/parrot-developers
 - https://firmware.parrot.com/Toolchains/parrot-tools-linuxgnutools-2012.03_1.0.0-1_i386.deb
+- https://github.com/parrot-opensource/toolchains
 
